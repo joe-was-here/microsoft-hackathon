@@ -16,10 +16,32 @@ function formatIngredient(ingredient) {
 }
 
 function RecipeCard({ recipe, onSave, needsGroceries = false }) {
+  const [checkedIngredients, setCheckedIngredients] = useState({})
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
   if (!recipe) return null
 
   const { title, ingredients = [], steps = [] } = recipe
   const time = formatTime(recipe)
+
+  const toggleIngredient = (index) => {
+    setCheckedIngredients((prev) => ({ ...prev, [index]: !prev[index] }))
+  }
+
+  const handleSave = async () => {
+    if (saving || saved) return
+    setSaving(true)
+    try {
+      const result = await saveRecipe(recipe)
+      setSaved(true)
+      if (onSave) onSave(result)
+    } catch (error) {
+      console.error('Failed to save recipe', error)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <article className="recipe-card">

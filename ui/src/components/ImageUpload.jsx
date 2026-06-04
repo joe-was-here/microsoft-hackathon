@@ -103,7 +103,7 @@ function ImageUpload({ onImageSelected }) {
           onClick={() => fileInputRef.current?.click()}
           disabled={isBusy}
         >
-          Choose file
+          📷 Upload photo
         </button>
       </div>
 

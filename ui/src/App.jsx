@@ -123,13 +123,6 @@ function HomePage() {
           <div className="app__mode-toggle" role="group" aria-label="Input mode">
             <button
               type="button"
-              className={`app__mode-btn${mode === 'photo' ? ' app__mode-btn--active' : ''}`}
-              onClick={() => handleModeChange('photo')}
-            >
-              📷 Upload photo
-            </button>
-            <button
-              type="button"
               className={`app__mode-btn${mode === 'chat' ? ' app__mode-btn--active' : ''}`}
               onClick={() => handleModeChange('chat')}
             >
