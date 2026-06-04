@@ -39,6 +39,35 @@ async def list_recipes(limit: int = Query(default=20, ge=1, le=100)) -> list[dic
         raise HTTPException(status_code=500, detail="Failed to fetch recipes") from exc
 
 
+@router.post("", status_code=201)
+@router.post("/", status_code=201)
+async def create_recipe(recipe: Recipe) -> dict:
+    """Persist a manually-entered recipe to the shared My Recipes store.
+
+    Used by the manual recipe entry form; the saved recipe shows up in the
+    same My Recipes view as suggested/OCR recipes and feeds the randomizer.
+    """
+    if not supabase_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="Recipe storage is not configured. Set SUPABASE_URL and SUPABASE_KEY.",
+        )
+
+    payload = recipe.model_dump(exclude_none=True)
+    payload["source"] = "manual"
+    payload.pop("id", None)  # Let the database assign the id.
+
+    try:
+        response = get_supabase_client().table("recipes").insert(payload).execute()
+    except Exception as exc:
+        logger.exception("Failed to save manual recipe")
+        raise HTTPException(status_code=500, detail="Failed to save recipe") from exc
+
+    if not response.data:
+        raise HTTPException(status_code=500, detail="Recipe was not saved.")
+    return response.data[0]
+
+
 @router.get("/{recipe_id}")
 async def get_recipe(recipe_id: str) -> dict:
     try:
