@@ -33,6 +33,15 @@ export function getRecipeById(recipeId) {
   return request(`/recipes/${recipeId}`)
 }
 
+// Sends a base64-encoded photo to the vision endpoint and returns the detected
+// ingredients ({ ingredients: [{ name, confidence }] }).
+export function detectIngredients(imageBase64, mediaType = 'image/jpeg') {
+  return request('/pantry/detect', {
+    method: 'POST',
+    body: JSON.stringify({ image: imageBase64, media_type: mediaType }),
+  })
+}
+
 // Generates 3-5 recipe suggestions from a confirmed ingredient list.
 export function suggestRecipes(ingredients) {
   return request('/recipes/suggest', {
