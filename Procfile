@@ -1,1 +1,1 @@
-web: if [ -d backend ]; then cd backend; fi; uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
+web: if [ -f backend/main.py ]; then cd backend && uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}; elif [ -f main.py ] && [ -f requirements.txt ]; then uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}; else caddy run --config /assets/Caddyfile --adapter caddyfile; fi
