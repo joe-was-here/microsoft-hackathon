@@ -13,6 +13,7 @@ class Settings:
     SUPABASE_URL: str = os.environ.get("SUPABASE_URL", "")
     SUPABASE_KEY: str = os.environ.get("SUPABASE_KEY", "")
     ANTHROPIC_API_KEY: str = os.environ.get("ANTHROPIC_API_KEY", "")
+    ANTHROPIC_MODEL: str = os.environ.get("ANTHROPIC_MODEL", "claude-3-5-haiku-20241022")
 
     # Comma-separated list of allowed frontend origins for CORS.
     FRONTEND_URL: str = os.environ.get("FRONTEND_URL", "")
