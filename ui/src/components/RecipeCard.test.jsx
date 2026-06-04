@@ -4,8 +4,12 @@ import RecipeCard from './RecipeCard'
 
 const sampleRecipe = {
   title: 'Tomato Basil Pasta',
-  time: '25 min',
-  ingredients: ['200g pasta', '3 tomatoes', 'Fresh basil'],
+  time_minutes: 25,
+  ingredients: [
+    { name: 'pasta', amount: '200', unit: 'g' },
+    { name: 'tomatoes', amount: '3', unit: '' },
+    { name: 'basil', amount: '', unit: '' },
+  ],
   steps: ['Boil the pasta', 'Make the sauce', 'Combine and serve'],
 }
 
@@ -17,7 +21,7 @@ describe('RecipeCard', () => {
       screen.getByRole('heading', { name: 'Tomato Basil Pasta' }),
     ).toBeDefined()
     expect(screen.getByText('⏱ 25 min')).toBeDefined()
-    expect(screen.getByText('200g pasta')).toBeDefined()
+    expect(screen.getByText('200 g pasta')).toBeDefined()
     expect(screen.getByText('Boil the pasta')).toBeDefined()
   })
 
