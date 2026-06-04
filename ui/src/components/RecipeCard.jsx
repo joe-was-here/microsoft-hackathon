@@ -1,9 +1,23 @@
 import './RecipeCard.css'
 
+function formatTime(recipe) {
+  if (typeof recipe.time_minutes === 'number') return `${recipe.time_minutes} min`
+  if (recipe.time) return recipe.time
+  return null
+}
+
+function formatIngredient(ingredient) {
+  if (typeof ingredient === 'string') return ingredient
+  return [ingredient.amount, ingredient.unit, ingredient.name]
+    .filter(Boolean)
+    .join(' ')
+}
+
 function RecipeCard({ recipe, onSave, needsGroceries = false }) {
   if (!recipe) return null
 
-  const { title, time, ingredients = [], steps = [] } = recipe
+  const { title, ingredients = [], steps = [] } = recipe
+  const time = formatTime(recipe)
 
   return (
     <article className="recipe-card">
@@ -23,8 +37,8 @@ function RecipeCard({ recipe, onSave, needsGroceries = false }) {
         <section className="recipe-card__section">
           <h3 className="recipe-card__subtitle">Ingredients</h3>
           <ul className="recipe-card__ingredients">
-            {ingredients.map((ingredient) => (
-              <li key={ingredient}>{ingredient}</li>
+            {ingredients.map((ingredient, index) => (
+              <li key={index}>{formatIngredient(ingredient)}</li>
             ))}
           </ul>
         </section>
