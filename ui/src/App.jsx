@@ -1,11 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
+import { getHealth } from './lib/api'
 import './App.css'
 
 function App() {
   const [count, setCount] = useState(0)
+  const [apiStatus, setApiStatus] = useState('checking')
+
+  useEffect(() => {
+    getHealth()
+      .then(() => setApiStatus('connected'))
+      .catch(() => setApiStatus('offline'))
+  }, [])
 
   return (
     <>
@@ -20,6 +28,7 @@ function App() {
           <p>
             Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
           </p>
+          <p>Backend: {apiStatus}</p>
         </div>
         <button
           type="button"

@@ -3,4 +3,5 @@ uvicorn
 httpx
 supabase
 anthropic
+python-dotenv
 pytest
