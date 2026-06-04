@@ -2,10 +2,14 @@
 // The base URL comes from the VITE_API_URL env var (set in Vercel for
 // production, and in .env.local for local development). Falls back to the
 // local FastAPI dev server.
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+).replace(/\/+$/, '')
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+
+  const response = await fetch(`${API_BASE_URL}${normalizedPath}`, {
     headers: { 'Content-Type': 'application/json', ...options.headers },
     ...options,
   })
