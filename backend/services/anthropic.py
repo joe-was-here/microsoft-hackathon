@@ -5,9 +5,6 @@ from anthropic import Anthropic
 
 from config import settings
 
-# Claude model used for vision and recipe generation.
-CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
-
 
 @lru_cache
 def get_anthropic_client() -> Anthropic:
@@ -68,7 +65,7 @@ def generate_recipe_suggestions(ingredients: list[str]) -> list[dict]:
     )
 
     message = client.messages.create(
-        model=CLAUDE_MODEL,
+        model=settings.ANTHROPIC_MODEL,
         max_tokens=2048,
         messages=[{"role": "user", "content": prompt}],
     )

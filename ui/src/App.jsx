@@ -1,22 +1,23 @@
 import { useEffect, useState } from 'react'
-import { getHealth, suggestRecipes } from './lib/api'
+import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
+import { getHealth, detectIngredients, suggestRecipes } from './lib/api'
 import ImageUpload from './components/ImageUpload'
 import IngredientReview from './components/IngredientReview'
 import RecipeCard from './components/RecipeCard'
 import Spinner from './components/Spinner'
+import MyRecipesPage from './pages/MyRecipesPage'
+import RecipeDetailPage from './pages/RecipeDetailPage'
 import './App.css'
 
-// Hardcoded stand-in for the POST /pantry/detect response. Swap this out for
-// the real detect call once that endpoint is wired in.
-const MOCK_DETECTED_INGREDIENTS = [
-  'eggs',
-  'cheddar cheese',
-  'spinach',
-  'tomatoes',
-  'onion',
-]
+// Splits a data URL ("data:image/png;base64,AAAA") into its media type and the
+// raw base64 payload, which is what the /pantry/detect endpoint expects.
+function parseDataUrl(dataUrl) {
+  const match = /^data:(.+?);base64,(.*)$/.exec(dataUrl ?? '')
+  if (!match) return { mediaType: 'image/jpeg', data: '' }
+  return { mediaType: match[1], data: match[2] }
+}
 
-function App() {
+function HomePage() {
   const [apiStatus, setApiStatus] = useState('checking')
   const [step, setStep] = useState('upload') // upload | detecting | review | suggesting | results
   const [ingredients, setIngredients] = useState([])
@@ -30,15 +31,26 @@ function App() {
       .catch(() => setApiStatus('offline'))
   }, [])
 
-  function handleImageSelected() {
-    // Simulate the detect API call with a brief loading state, then use the
-    // hardcoded ingredient list.
+  async function handleImageSelected(dataUrl) {
     setError(null)
     setStep('detecting')
-    setTimeout(() => {
-      setIngredients(MOCK_DETECTED_INGREDIENTS)
+    try {
+      const { mediaType, data } = parseDataUrl(dataUrl)
+      const result = await detectIngredients(data, mediaType)
+      const names = (result?.ingredients ?? []).map((item) => item.name)
+      if (names.length === 0) {
+        setError('No ingredients detected — add them manually to continue.')
+      }
+      setIngredients(names)
       setStep('review')
-    }, 800)
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? `Couldn't detect ingredients: ${caught.message}`
+          : 'Something went wrong detecting ingredients.',
+      )
+      setStep('upload')
+    }
   }
 
   async function handleConfirm(confirmedIngredients) {
@@ -82,9 +94,21 @@ function App() {
         <h1>AI Sous Chef</h1>
         <p className="app__subtitle">Snap your ingredients, get recipes.</p>
         <p className="app__status">Backend: {apiStatus}</p>
+        <Link className="app__link" to="/my-recipes">
+          View saved recipes
+        </Link>
       </header>
 
-      {step === 'upload' && <ImageUpload onImageSelected={handleImageSelected} />}
+      {step === 'upload' && (
+        <>
+          {error && (
+            <p className="app__error" role="alert">
+              {error}
+            </p>
+          )}
+          <ImageUpload onImageSelected={handleImageSelected} />
+        </>
+      )}
 
       {step === 'detecting' && <Spinner label="Detecting ingredients…" />}
 
@@ -123,6 +147,19 @@ function App() {
         </section>
       )}
     </main>
+  )
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/my-recipes" element={<MyRecipesPage />} />
+        <Route path="/recipes/:recipeId" element={<RecipeDetailPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
