@@ -3,8 +3,10 @@ import { render, screen } from '@testing-library/react'
 import App from './App'
 
 describe('App', () => {
-  it('renders the app', () => {
+  it('renders the app heading and upload controls', () => {
     render(<App />)
-    expect(screen.getByText('Get started')).toBeDefined()
+    expect(screen.getByRole('heading', { name: 'AI Sous Chef' })).toBeDefined()
+    expect(screen.getByRole('button', { name: 'Take photo' })).toBeDefined()
+    expect(screen.getByRole('button', { name: 'Choose file' })).toBeDefined()
   })
 })
