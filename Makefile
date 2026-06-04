@@ -8,7 +8,7 @@
 
 # Use the repo-local virtualenv if present, otherwise fall back to system python.
 VENV := .venv
-PYTHON := $(if $(wildcard $(VENV)/bin/python),$(VENV)/bin/python,python3)
+PYTHON := $(if $(wildcard $(VENV)/bin/python),$(CURDIR)/$(VENV)/bin/python,python3)
 
 .DEFAULT_GOAL := help
 
@@ -30,7 +30,7 @@ install-frontend:
 	cd ui && pnpm install
 
 backend:
-	cd backend && $(abspath $(PYTHON)) -m uvicorn main:app --reload
+	cd backend && $(PYTHON) -m uvicorn main:app --reload
 
 frontend:
 	cd ui && pnpm dev
@@ -40,6 +40,6 @@ frontend:
 dev:
 	@echo "Starting backend (http://localhost:8000) and frontend (http://localhost:5173)..."
 	@trap 'kill 0' EXIT INT TERM; \
-		( cd backend && $(abspath $(PYTHON)) -m uvicorn main:app --reload ) & \
+		( cd backend && $(PYTHON) -m uvicorn main:app --reload ) & \
 		( cd ui && pnpm dev ) & \
 		wait
