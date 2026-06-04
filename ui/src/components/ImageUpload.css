@@ -28,6 +28,7 @@
   border-radius: 1rem;
   overflow: hidden;
   background: #f3f4f6;
+  transform: translateX(-2rem);
 }
 
 .image-upload__placeholder {
@@ -61,8 +62,8 @@
 }
 
 .image-upload__button {
-  min-width: 9rem;
-  padding: 0.75rem 1.5rem 0.75rem 1.5rem;
+  flex: 1;
+  padding: 0.85rem 1.5rem 0.85rem 1.5rem;
   font-size: 1rem;
   font-weight: 600;
   text-align: center;
