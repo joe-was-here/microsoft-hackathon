@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { saveRecipe } from '../lib/api'
 import './RecipeCard.css'
 
 function formatTime(recipe) {
@@ -14,10 +16,26 @@ function formatIngredient(ingredient) {
 }
 
 function RecipeCard({ recipe, onSave, needsGroceries = false }) {
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
   if (!recipe) return null
 
   const { title, ingredients = [], steps = [] } = recipe
   const time = formatTime(recipe)
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      const savedRecipe = await saveRecipe(recipe)
+      setSaved(true)
+      onSave?.(savedRecipe)
+    } catch (err) {
+      console.error('Failed to save recipe', err)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <article className="recipe-card">
@@ -58,9 +76,10 @@ function RecipeCard({ recipe, onSave, needsGroceries = false }) {
       <button
         type="button"
         className="recipe-card__save"
-        onClick={() => onSave?.(recipe)}
+        onClick={handleSave}
+        disabled={saving || saved}
       >
-        Save recipe
+        {saved ? 'Saved!' : saving ? 'Saving…' : 'Save recipe'}
       </button>
     </article>
   )
