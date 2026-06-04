@@ -1,8 +1,8 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "if [ -f backend/requirements.txt ] && command -v pip >/dev/null 2>&1; then pip install -r backend/requirements.txt; elif [ -f requirements.txt ] && command -v pip >/dev/null 2>&1; then pip install -r requirements.txt; else echo 'No Python requirements detected; skipping pip install.'; fi"
+buildCommand = "if [ -f package.json ] && command -v pnpm >/dev/null 2>&1; then pnpm i --frozen-lockfile && pnpm build; fi; if [ -f backend/requirements.txt ] && command -v pip >/dev/null 2>&1; then pip install -r backend/requirements.txt; elif [ -f requirements.txt ] && command -v pip >/dev/null 2>&1; then pip install -r requirements.txt; else echo 'No Python requirements detected; skipping pip install.'; fi"
 
 [deploy]
-startCommand = "if [ -f backend/main.py ]; then cd backend && uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}; elif [ -f main.py ] && [ -f requirements.txt ]; then uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}; else caddy run --config /assets/Caddyfile --adapter caddyfile; fi"
+startCommand = "if [ -f backend/main.py ]; then cd backend && uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}; elif [ -f main.py ] && [ -f requirements.txt ]; then uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}; elif [ -f package.json ] && command -v pnpm >/dev/null 2>&1; then pnpm preview --host 0.0.0.0 --port ${PORT:-3000}; else caddy run --config /assets/Caddyfile --adapter caddyfile; fi"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
