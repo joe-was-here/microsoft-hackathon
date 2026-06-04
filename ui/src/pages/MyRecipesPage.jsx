@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import ManualRecipeForm from '../components/ManualRecipeForm'
 import { getRecipes } from '../lib/api'
 import './MyRecipesPage.css'
 
@@ -49,37 +50,30 @@ function MyRecipesPage() {
   const [recipes, setRecipes] = useState([])
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState(null)
+  const [isAdding, setIsAdding] = useState(false)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    let isMounted = true
+  const loadRecipes = useCallback(async () => {
+    setStatus('loading')
+    setError(null)
 
-    async function loadRecipes() {
-      setStatus('loading')
-      setError(null)
-
-      try {
-        const data = await getRecipes()
-        if (!isMounted) return
-        setRecipes(Array.isArray(data) ? data : [])
-        setStatus('ready')
-      } catch (caught) {
-        if (!isMounted) return
-        setError(
-          caught instanceof Error
-            ? caught.message
-            : 'Failed to load saved recipes.',
-        )
-        setStatus('error')
-      }
-    }
-
-    loadRecipes()
-
-    return () => {
-      isMounted = false
+    try {
+      const data = await getRecipes()
+      setRecipes(Array.isArray(data) ? data : [])
+      setStatus('ready')
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : 'Failed to load saved recipes.',
+      )
+      setStatus('error')
     }
   }, [])
+
+  useEffect(() => {
+    loadRecipes()
+  }, [loadRecipes])
 
   const hasRecipes = useMemo(() => recipes.length > 0, [recipes])
 
@@ -87,6 +81,12 @@ function MyRecipesPage() {
     navigate(`/recipes/${encodeURIComponent(getRecipeId(recipe))}`, {
       state: { recipe },
     })
+  }
+
+  function handleRecipeCreated(recipe) {
+    setRecipes((current) => [recipe, ...current])
+    setStatus('ready')
+    setIsAdding(false)
   }
 
   return (
@@ -97,6 +97,17 @@ function MyRecipesPage() {
           Back to generator
         </Link>
       </header>
+
+      <button
+        type="button"
+        className="my-recipes__add-toggle"
+        onClick={() => setIsAdding((current) => !current)}
+        aria-expanded={isAdding}
+      >
+        {isAdding ? 'Cancel' : 'Add recipe manually'}
+      </button>
+
+      {isAdding && <ManualRecipeForm onCreated={handleRecipeCreated} />}
 
       {status === 'loading' && <p className="my-recipes__status">Loading recipes…</p>}
 

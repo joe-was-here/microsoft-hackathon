@@ -20,6 +20,9 @@ DETECT_PROMPT = (
 )
 
 
+_ALLOWED_MEDIA_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+
+
 class DetectRequest(BaseModel):
     image: str  # base64-encoded image data
     media_type: str = "image/jpeg"  # e.g. image/jpeg, image/png, image/webp
@@ -36,6 +39,11 @@ class DetectResponse(BaseModel):
 
 @router.post("/detect", response_model=DetectResponse)
 async def detect_ingredients(body: DetectRequest) -> DetectResponse:
+    if body.media_type not in _ALLOWED_MEDIA_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported media_type '{body.media_type}'. Allowed: {sorted(_ALLOWED_MEDIA_TYPES)}",
+        )
     client = get_anthropic_client()
 
     try:

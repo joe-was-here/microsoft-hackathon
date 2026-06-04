@@ -33,6 +33,15 @@ export function getRecipeById(recipeId) {
   return request(`/recipes/${recipeId}`)
 }
 
+// Saves a manually-entered recipe to the shared My Recipes store
+// (POST /recipes). The backend stamps it with source: "manual".
+export function createRecipe(recipe) {
+  return request('/recipes', {
+    method: 'POST',
+    body: JSON.stringify(recipe),
+  })
+}
+
 // Sends a base64-encoded photo to the vision endpoint and returns the detected
 // ingredients ({ ingredients: [{ name, confidence }] }).
 export function detectIngredients(imageBase64, mediaType = 'image/jpeg') {
