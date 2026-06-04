@@ -1,5 +1,11 @@
 import os
 
+from dotenv import load_dotenv
+
+# Load environment variables from a local .env file if present (no-op in
+# production where variables are provided by the platform, e.g. Railway).
+load_dotenv()
+
 
 class Settings:
     """Application configuration loaded from environment variables."""
