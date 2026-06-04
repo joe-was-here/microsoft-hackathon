@@ -35,6 +35,13 @@
   color: #9ca3af;
 }
 
+.app__link {
+  margin: 0.35rem 0 0 0;
+  color: #14532d;
+  font-weight: 600;
+  text-decoration: none;
+}
+
 .app__results {
   width: 100%;
   display: flex;

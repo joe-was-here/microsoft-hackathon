@@ -22,7 +22,11 @@ export function getHealth() {
 }
 
 export function getRecipes() {
-  return request('/recipes/')
+  return request('/recipes')
+}
+
+export function getRecipeById(recipeId) {
+  return request(`/recipes/${recipeId}`)
 }
 
 // Generates 3-5 recipe suggestions from a confirmed ingredient list.
