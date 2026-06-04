@@ -81,6 +81,36 @@
   text-align: center;
 }
 
+.app__mode-toggle {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.app__mode-btn {
+  flex: 1 1 0;
+  padding: 0.6rem 1rem 0.6rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  background: #f9fafb;
+  border: 1.5px solid #d1d5db;
+  border-radius: 0.6rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.app__mode-btn:hover:not(.app__mode-btn--active) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.app__mode-btn--active {
+  color: #14532d;
+  background: #f0fdf4;
+  border-color: #14532d;
+}
+
 .app__hint {
   margin: 0 0 0 0;
   text-align: center;

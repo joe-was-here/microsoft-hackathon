@@ -50,4 +50,13 @@ export function suggestRecipes(ingredients) {
   })
 }
 
+// Sends a freeform natural language message to the AI agent and returns
+// recipe suggestions (searches the DB first, then generates with Claude).
+export function chatSuggestRecipes(message) {
+  return request('/recipes/chat', {
+    method: 'POST',
+    body: JSON.stringify({ message }),
+  })
+}
+
 export { API_BASE_URL, request }

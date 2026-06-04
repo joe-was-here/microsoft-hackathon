@@ -53,12 +53,18 @@ def find_recipes_by_ingredients(ingredients: list[str], limit: int = 5) -> list[
 
     scored: list[tuple[int, dict]] = []
     for row in rows:
-        names: set[str] = set()
+        names: list[str] = []
         for ingredient in row.get("ingredients") or []:
             name = ingredient.get("name", "") if isinstance(ingredient, dict) else str(ingredient)
             if name:
-                names.add(name.strip().lower())
-        overlap = len(wanted & names)
+                names.append(name.strip().lower())
+        # Count how many wanted terms appear as a substring in any stored
+        # ingredient name, or vice-versa (e.g. "miso" matches "miso paste").
+        overlap = sum(
+            1
+            for term in wanted
+            if any(term in stored_name or stored_name in term for stored_name in names)
+        )
         if overlap:
             scored.append((overlap, row))
 

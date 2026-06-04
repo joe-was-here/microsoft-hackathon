@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from models import Recipe
-from services.anthropic import generate_recipe_suggestions
+from services.anthropic import chat_suggest_recipes, generate_recipe_suggestions
 from services.supabase import (
     find_recipes_by_ingredients,
     get_supabase_client,
@@ -19,6 +19,10 @@ router = APIRouter(prefix="/recipes", tags=["recipes"])
 
 class SuggestRequest(BaseModel):
     ingredients: list[str] = Field(default_factory=list)
+
+
+class ChatRequest(BaseModel):
+    message: str
 
 
 @router.get("")
@@ -71,6 +75,31 @@ async def get_recipe(recipe_id: str) -> dict:
     except Exception as exc:
         logger.exception("Failed to fetch recipe %s", recipe_id)
         raise HTTPException(status_code=500, detail="Failed to fetch recipe") from exc
+
+
+@router.post("/chat")
+async def chat_suggest(payload: ChatRequest) -> list[Recipe]:
+    """Suggest recipes from a freeform natural language request.
+
+    Claude uses tool use to search the recipe database first, then generates
+    new recipes if no saved matches are found.
+    """
+    message = payload.message.strip()
+    if not message:
+        raise HTTPException(status_code=400, detail="No message provided.")
+
+    try:
+        raw_recipes = chat_suggest_recipes(message)
+    except RuntimeError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=502, detail=str(error)) from error
+
+    recipes: list[Recipe] = []
+    for raw in raw_recipes:
+        raw.setdefault("source", "suggested")
+        recipes.append(Recipe.model_validate(raw))
+    return recipes
 
 
 @router.post("/suggest")

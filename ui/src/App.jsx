@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
-import { getHealth, detectIngredients, suggestRecipes } from './lib/api'
+import { getHealth, detectIngredients, suggestRecipes, chatSuggestRecipes } from './lib/api'
+import { ChatInput } from './components/ChatInput'
 import ImageUpload from './components/ImageUpload'
 import IngredientReview from './components/IngredientReview'
 import RecipeCard from './components/RecipeCard'
@@ -19,6 +20,7 @@ function parseDataUrl(dataUrl) {
 
 function HomePage() {
   const [apiStatus, setApiStatus] = useState('checking')
+  const [mode, setMode] = useState('photo') // photo | chat
   const [step, setStep] = useState('upload') // upload | detecting | review | suggesting | results
   const [ingredients, setIngredients] = useState([])
   const [recipes, setRecipes] = useState([])
@@ -81,10 +83,35 @@ function HomePage() {
     )
   }
 
+  async function handleChatSubmit(message) {
+    setError(null)
+    setStep('suggesting')
+    try {
+      const result = await chatSuggestRecipes(message)
+      if (!Array.isArray(result) || result.length === 0) {
+        throw new Error('No recipes came back. Try rephrasing your request.')
+      }
+      setRecipes(result)
+      setStep('results')
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : 'Something went wrong generating recipes.',
+      )
+      setStep('upload')
+    }
+  }
+
   function handleStartOver() {
     setStep('upload')
     setIngredients([])
     setRecipes([])
+    setError(null)
+  }
+
+  function handleModeChange(newMode) {
+    setMode(newMode)
     setError(null)
   }
 
@@ -101,12 +128,29 @@ function HomePage() {
 
       {step === 'upload' && (
         <>
+          <div className="app__mode-toggle" role="group" aria-label="Input mode">
+            <button
+              type="button"
+              className={`app__mode-btn${mode === 'photo' ? ' app__mode-btn--active' : ''}`}
+              onClick={() => handleModeChange('photo')}
+            >
+              📷 Upload photo
+            </button>
+            <button
+              type="button"
+              className={`app__mode-btn${mode === 'chat' ? ' app__mode-btn--active' : ''}`}
+              onClick={() => handleModeChange('chat')}
+            >
+              💬 Describe it
+            </button>
+          </div>
           {error && (
             <p className="app__error" role="alert">
               {error}
             </p>
           )}
-          <ImageUpload onImageSelected={handleImageSelected} />
+          {mode === 'photo' && <ImageUpload onImageSelected={handleImageSelected} />}
+          {mode === 'chat' && <ChatInput onSubmit={handleChatSubmit} />}
         </>
       )}
 
