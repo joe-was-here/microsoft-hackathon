@@ -25,6 +25,13 @@ export function getRecipes() {
   return request('/recipes/')
 }
 
+export function saveRecipe(recipe) {
+  return request('/recipes/', {
+    method: 'POST',
+    body: JSON.stringify(recipe),
+  })
+}
+
 // Generates 3-5 recipe suggestions from a confirmed ingredient list.
 export function suggestRecipes(ingredients) {
   return request('/recipes/suggest', {
