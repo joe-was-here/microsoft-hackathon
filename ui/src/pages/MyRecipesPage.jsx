@@ -19,18 +19,30 @@ function formatMealType(recipe) {
   return recipe.meal_type ?? recipe.mealType ?? 'Any meal'
 }
 
-function SavedRecipeCard({ recipe, onSelect }) {
+function SavedRecipeCard({ recipe, onSelect, onEdit }) {
   return (
-    <button
-      type="button"
-      className="my-recipes__card"
-      onClick={() => onSelect(recipe)}
-      aria-label={`Open ${recipe.title}`}
-    >
-      <span className="my-recipes__title">{recipe.title}</span>
-      <span className="my-recipes__meta">{formatTime(recipe)}</span>
-      <span className="my-recipes__meta">{formatMealType(recipe)}</span>
-    </button>
+    <div className="my-recipes__card">
+      <button
+        type="button"
+        className="my-recipes__card-open"
+        onClick={() => onSelect(recipe)}
+        aria-label={`Open ${recipe.title}`}
+      >
+        <span className="my-recipes__title">{recipe.title}</span>
+        <span className="my-recipes__meta">{formatTime(recipe)}</span>
+        <span className="my-recipes__meta">{formatMealType(recipe)}</span>
+      </button>
+      {recipe.id != null && (
+        <button
+          type="button"
+          className="my-recipes__edit"
+          onClick={() => onEdit(recipe)}
+          aria-label={`Edit ${recipe.title}`}
+        >
+          Edit
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -51,6 +63,7 @@ function MyRecipesPage() {
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState(null)
   const [isAdding, setIsAdding] = useState(false)
+  const [editingId, setEditingId] = useState(null)
   const navigate = useNavigate()
 
   const loadRecipes = useCallback(async () => {
@@ -89,23 +102,39 @@ function MyRecipesPage() {
     setIsAdding(false)
   }
 
+  function handleEditRecipe(recipe) {
+    setIsAdding(false)
+    setEditingId(getRecipeId(recipe))
+  }
+
+  function handleRecipeUpdated(updated) {
+    setRecipes((current) =>
+      current.map((recipe) =>
+        getRecipeId(recipe) === editingId ? { ...recipe, ...updated } : recipe,
+      ),
+    )
+    setEditingId(null)
+  }
+
   return (
     <main className="my-recipes">
       <header className="my-recipes__header">
         <h1>My Recipes</h1>
+      </header>
+
+      <div className="my-recipes__actions">
+        <button
+          type="button"
+          className="my-recipes__add-toggle"
+          onClick={() => setIsAdding((current) => !current)}
+          aria-expanded={isAdding}
+        >
+          {isAdding ? 'Cancel' : 'Add recipe manually'}
+        </button>
         <Link to="/" className="my-recipes__back-link">
           Back to generator
         </Link>
-      </header>
-
-      <button
-        type="button"
-        className="my-recipes__add-toggle"
-        onClick={() => setIsAdding((current) => !current)}
-        aria-expanded={isAdding}
-      >
-        {isAdding ? 'Cancel' : 'Add recipe manually'}
-      </button>
+      </div>
 
       {isAdding && <ManualRecipeForm onCreated={handleRecipeCreated} />}
 
@@ -123,7 +152,20 @@ function MyRecipesPage() {
         <ul className="my-recipes__list" aria-label="Saved recipes">
           {recipes.map((recipe, index) => (
             <li key={getRecipeId(recipe) ?? index}>
-              <SavedRecipeCard recipe={recipe} onSelect={handleSelectRecipe} />
+              {editingId === getRecipeId(recipe) ? (
+                <ManualRecipeForm
+                  key={getRecipeId(recipe)}
+                  initialRecipe={recipe}
+                  onUpdated={handleRecipeUpdated}
+                  onCancel={() => setEditingId(null)}
+                />
+              ) : (
+                <SavedRecipeCard
+                  recipe={recipe}
+                  onSelect={handleSelectRecipe}
+                  onEdit={handleEditRecipe}
+                />
+              )}
             </li>
           ))}
         </ul>

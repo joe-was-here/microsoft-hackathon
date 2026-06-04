@@ -1,10 +1,46 @@
 import { useState } from 'react'
-import { createRecipe } from '../lib/api'
+import { createRecipe, updateRecipe } from '../lib/api'
 import './ManualRecipeForm.css'
 
 const EMPTY_INGREDIENT = { name: '', amount: '', unit: '' }
 
-function buildPayload({ title, ingredients, steps, mealType, flavorTags }) {
+function toFormState(recipe) {
+  if (!recipe) {
+    return {
+      title: '',
+      ingredients: [{ ...EMPTY_INGREDIENT }],
+      steps: [''],
+      mealType: '',
+      flavorTags: '',
+    }
+  }
+
+  const ingredients =
+    Array.isArray(recipe.ingredients) && recipe.ingredients.length
+      ? recipe.ingredients.map((ingredient) => ({
+          name: ingredient?.name ?? '',
+          amount: ingredient?.amount ?? '',
+          unit: ingredient?.unit ?? '',
+        }))
+      : [{ ...EMPTY_INGREDIENT }]
+
+  const steps =
+    Array.isArray(recipe.steps) && recipe.steps.length ? [...recipe.steps] : ['']
+
+  const flavorTags = Array.isArray(recipe.flavor_tags)
+    ? recipe.flavor_tags.join(', ')
+    : ''
+
+  return {
+    title: recipe.title ?? '',
+    ingredients,
+    steps,
+    mealType: recipe.meal_type ?? '',
+    flavorTags,
+  }
+}
+
+function buildPayload({ title, ingredients, steps, mealType, flavorTags, source }) {
   const cleanedIngredients = ingredients
     .map((ingredient) => ({
       name: ingredient.name.trim(),
@@ -25,7 +61,7 @@ function buildPayload({ title, ingredients, steps, mealType, flavorTags }) {
     ingredients: cleanedIngredients,
     steps: cleanedSteps,
     flavor_tags: cleanedTags,
-    source: 'manual',
+    source: source ?? 'manual',
   }
 
   if (mealType.trim()) payload.meal_type = mealType.trim()
@@ -43,12 +79,14 @@ function validate(payload) {
   return errors
 }
 
-function ManualRecipeForm({ onCreated }) {
-  const [title, setTitle] = useState('')
-  const [ingredients, setIngredients] = useState([{ ...EMPTY_INGREDIENT }])
-  const [steps, setSteps] = useState([''])
-  const [mealType, setMealType] = useState('')
-  const [flavorTags, setFlavorTags] = useState('')
+function ManualRecipeForm({ onCreated, initialRecipe = null, onUpdated, onCancel }) {
+  const isEditing = Boolean(initialRecipe)
+  const initialState = toFormState(initialRecipe)
+  const [title, setTitle] = useState(initialState.title)
+  const [ingredients, setIngredients] = useState(initialState.ingredients)
+  const [steps, setSteps] = useState(initialState.steps)
+  const [mealType, setMealType] = useState(initialState.mealType)
+  const [flavorTags, setFlavorTags] = useState(initialState.flavorTags)
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState('idle') // idle | saving | success | error
   const [submitError, setSubmitError] = useState(null)
@@ -103,7 +141,14 @@ function ManualRecipeForm({ onCreated }) {
     event.preventDefault()
     setSubmitError(null)
 
-    const payload = buildPayload({ title, ingredients, steps, mealType, flavorTags })
+    const payload = buildPayload({
+      title,
+      ingredients,
+      steps,
+      mealType,
+      flavorTags,
+      source: initialRecipe?.source ?? 'manual',
+    })
     const validationErrors = validate(payload)
     setErrors(validationErrors)
     if (Object.keys(validationErrors).length > 0) {
@@ -113,10 +158,16 @@ function ManualRecipeForm({ onCreated }) {
 
     setStatus('saving')
     try {
-      const saved = await createRecipe(payload)
-      setStatus('success')
-      resetForm()
-      onCreated?.(saved ?? payload)
+      if (isEditing) {
+        const saved = await updateRecipe(initialRecipe.id, payload)
+        setStatus('success')
+        onUpdated?.(saved ?? { ...initialRecipe, ...payload })
+      } else {
+        const saved = await createRecipe(payload)
+        setStatus('success')
+        resetForm()
+        onCreated?.(saved ?? payload)
+      }
     } catch (caught) {
       setStatus('error')
       setSubmitError(
@@ -248,7 +299,7 @@ function ManualRecipeForm({ onCreated }) {
 
       {status === 'success' && (
         <p className="manual-recipe__success" role="status">
-          Recipe saved to My Recipes.
+          {isEditing ? 'Recipe updated.' : 'Recipe saved to My Recipes.'}
         </p>
       )}
 
@@ -258,9 +309,24 @@ function ManualRecipeForm({ onCreated }) {
         </p>
       )}
 
-      <button type="submit" className="manual-recipe__submit" disabled={status === 'saving'}>
-        {status === 'saving' ? 'Saving…' : 'Save recipe'}
-      </button>
+      <div className="manual-recipe__actions">
+        {isEditing && onCancel && (
+          <button
+            type="button"
+            className="manual-recipe__cancel"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+        )}
+        <button type="submit" className="manual-recipe__submit" disabled={status === 'saving'}>
+          {status === 'saving'
+            ? 'Saving…'
+            : isEditing
+              ? 'Save changes'
+              : 'Save recipe'}
+        </button>
+      </div>
     </form>
   )
 }

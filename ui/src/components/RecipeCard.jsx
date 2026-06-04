@@ -16,26 +16,10 @@ function formatIngredient(ingredient) {
 }
 
 function RecipeCard({ recipe, onSave, needsGroceries = false }) {
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-
   if (!recipe) return null
 
   const { title, ingredients = [], steps = [] } = recipe
   const time = formatTime(recipe)
-
-  async function handleSave() {
-    setSaving(true)
-    try {
-      const savedRecipe = await saveRecipe(recipe)
-      setSaved(true)
-      onSave?.(savedRecipe)
-    } catch (err) {
-      console.error('Failed to save recipe', err)
-    } finally {
-      setSaving(false)
-    }
-  }
 
   return (
     <article className="recipe-card">
@@ -56,7 +40,25 @@ function RecipeCard({ recipe, onSave, needsGroceries = false }) {
           <h3 className="recipe-card__subtitle">Ingredients</h3>
           <ul className="recipe-card__ingredients">
             {ingredients.map((ingredient, index) => (
-              <li key={index}>{formatIngredient(ingredient)}</li>
+              <li key={index} className="recipe-card__ingredient">
+                <label className="recipe-card__ingredient-label">
+                  <input
+                    type="checkbox"
+                    className="recipe-card__checkbox"
+                    checked={Boolean(checkedIngredients[index])}
+                    onChange={() => toggleIngredient(index)}
+                  />
+                  <span
+                    className={
+                      checkedIngredients[index]
+                        ? 'recipe-card__ingredient-text recipe-card__ingredient-text--checked'
+                        : 'recipe-card__ingredient-text'
+                    }
+                  >
+                    {formatIngredient(ingredient)}
+                  </span>
+                </label>
+              </li>
             ))}
           </ul>
         </section>

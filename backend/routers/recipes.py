@@ -96,6 +96,38 @@ async def create_recipe(recipe: Recipe) -> dict:
     return response.data[0]
 
 
+@router.put("/{recipe_id}")
+async def update_recipe(recipe_id: str, recipe: Recipe) -> dict:
+    """Update an existing saved recipe in the My Recipes store.
+
+    Used by the edit form in the My Recipes view.
+    """
+    if not supabase_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="Recipe storage is not configured. Set SUPABASE_URL and SUPABASE_KEY.",
+        )
+
+    payload = recipe.model_dump(exclude_none=True)
+    payload.pop("id", None)  # The id comes from the path, not the body.
+
+    try:
+        response = (
+            get_supabase_client()
+            .table("recipes")
+            .update(payload)
+            .eq("id", recipe_id)
+            .execute()
+        )
+    except Exception as exc:
+        logger.exception("Failed to update recipe %s", recipe_id)
+        raise HTTPException(status_code=500, detail="Failed to update recipe") from exc
+
+    if not response.data:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    return response.data[0]
+
+
 @router.get("/{recipe_id}")
 async def get_recipe(recipe_id: str) -> dict:
     try:

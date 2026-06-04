@@ -42,6 +42,14 @@ export function createRecipe(recipe) {
   })
 }
 
+// Updates an existing saved recipe (PUT /recipes/{id}).
+export function updateRecipe(recipeId, recipe) {
+  return request(`/recipes/${recipeId}`, {
+    method: 'PUT',
+    body: JSON.stringify(recipe),
+  })
+}
+
 // Sends a base64-encoded photo to the vision endpoint and returns the detected
 // ingredients ({ ingredients: [{ name, confidence }] }).
 export function detectIngredients(imageBase64, mediaType = 'image/jpeg') {

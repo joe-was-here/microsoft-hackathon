@@ -106,6 +106,12 @@
   border-radius: 0.6rem;
 }
 
+.manual-recipe__actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
 .manual-recipe__submit {
   font-size: 1rem;
   font-weight: 600;
@@ -120,4 +126,15 @@
 .manual-recipe__submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.manual-recipe__cancel {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 0.6rem;
+  padding: 0.7rem 1rem 0.7rem 1rem;
+  cursor: pointer;
 }
