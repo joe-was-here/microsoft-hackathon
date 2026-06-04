@@ -34,6 +34,29 @@ async def list_recipes(limit: int = Query(default=20, ge=1, le=100)) -> list[dic
         raise HTTPException(status_code=500, detail="Failed to fetch recipes") from exc
 
 
+@router.post("/", response_model=Recipe, status_code=201)
+async def save_recipe(recipe: Recipe) -> Recipe:
+    """Persist a recipe to Supabase and return it with its generated UUID."""
+    data = recipe.model_dump(exclude={"id"})
+    # Serialize nested structures so Supabase receives plain dicts/lists.
+    data["ingredients"] = [ing.model_dump() for ing in recipe.ingredients]
+    try:
+        response = (
+            get_supabase_client()
+            .table("recipes")
+            .insert(data)
+            .execute()
+        )
+    except Exception as exc:
+        logger.exception("Failed to save recipe to Supabase")
+        raise HTTPException(status_code=500, detail="Failed to save recipe") from exc
+
+    if not response.data:
+        raise HTTPException(status_code=500, detail="Recipe insert returned no data")
+
+    return Recipe.model_validate(response.data[0])
+
+
 @router.post("/suggest")
 async def suggest_recipes(payload: SuggestRequest) -> list[Recipe]:
     """Generate 3-5 recipe suggestions from a confirmed ingredient list."""
