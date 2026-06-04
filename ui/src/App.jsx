@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
-import { getHealth, detectIngredients, suggestRecipes, chatSuggestRecipes } from './lib/api'
+import { detectIngredients, suggestRecipes, chatSuggestRecipes } from './lib/api'
 import { ChatInput } from './components/ChatInput'
 import ImageUpload from './components/ImageUpload'
 import IngredientReview from './components/IngredientReview'
@@ -19,19 +19,12 @@ function parseDataUrl(dataUrl) {
 }
 
 function HomePage() {
-  const [apiStatus, setApiStatus] = useState('checking')
   const [mode, setMode] = useState('photo') // photo | chat
   const [step, setStep] = useState('upload') // upload | detecting | review | suggesting | results
   const [ingredients, setIngredients] = useState([])
   const [recipes, setRecipes] = useState([])
   const [savedRecipes, setSavedRecipes] = useState([])
   const [error, setError] = useState(null)
-
-  useEffect(() => {
-    getHealth()
-      .then(() => setApiStatus('connected'))
-      .catch(() => setApiStatus('offline'))
-  }, [])
 
   async function handleImageSelected(dataUrl) {
     setError(null)
@@ -120,7 +113,6 @@ function HomePage() {
       <header className="app__header">
         <h1>AI Sous Chef</h1>
         <p className="app__subtitle">Snap your ingredients, get recipes.</p>
-        <p className="app__status">Backend: {apiStatus}</p>
         <Link className="app__link" to="/my-recipes">
           View saved recipes
         </Link>

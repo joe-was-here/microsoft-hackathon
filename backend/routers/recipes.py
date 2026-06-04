@@ -43,10 +43,63 @@ async def list_recipes(limit: int = Query(default=20, ge=1, le=100)) -> list[dic
         raise HTTPException(status_code=500, detail="Failed to fetch recipes") from exc
 
 
+@router.post("/save", response_model=Recipe, status_code=201)
+async def save_recipe(recipe: Recipe) -> Recipe:
+    """Persist a recipe to Supabase and return it with its generated UUID."""
+    if not supabase_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="Recipe storage is not configured. Set SUPABASE_URL and SUPABASE_KEY.",
+        )
+    data = recipe.model_dump(exclude={"id"})
+    try:
+        response = (
+            get_supabase_client()
+            .table("recipes")
+            .insert(data)
+            .execute()
+        )
+    except Exception as exc:
+        logger.exception("Failed to save recipe to Supabase")
+        raise HTTPException(status_code=500, detail="Failed to save recipe") from exc
+
+    if not response.data:
+        raise HTTPException(status_code=500, detail="Recipe insert returned no data")
+
+    return Recipe.model_validate(response.data[0])
+
+@router.post("/", status_code=201)
+async def create_recipe(recipe: Recipe) -> dict:
+    """Persist a manually-entered recipe to the shared My Recipes store.
+
+    Used by the manual recipe entry form; the saved recipe shows up in the
+    same My Recipes view as suggested/OCR recipes and feeds the randomizer.
+    """
+    if not supabase_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="Recipe storage is not configured. Set SUPABASE_URL and SUPABASE_KEY.",
+        )
+
+    payload = recipe.model_dump(exclude_none=True)
+    payload["source"] = "manual"
+    payload.pop("id", None)  # Let the database assign the id.
+
+    try:
+        response = get_supabase_client().table("recipes").insert(payload).execute()
+    except Exception as exc:
+        logger.exception("Failed to save manual recipe")
+        raise HTTPException(status_code=500, detail="Failed to save recipe") from exc
+
+    if not response.data:
+        raise HTTPException(status_code=500, detail="Recipe was not saved.")
+    return response.data[0]
+
+
 @router.get("/{recipe_id}")
 async def get_recipe(recipe_id: str) -> dict:
     try:
-        id_lookup = (
+        response = (
             get_supabase_client()
             .table("recipes")
             .select("*")
@@ -54,22 +107,9 @@ async def get_recipe(recipe_id: str) -> dict:
             .limit(1)
             .execute()
         )
-        if id_lookup.data:
-            return id_lookup.data[0]
-
-        title_lookup = (
-            get_supabase_client()
-            .table("recipes")
-            .select("*")
-            .eq("title", recipe_id)
-            .order("created_at", desc=True)
-            .limit(1)
-            .execute()
-        )
-        if title_lookup.data:
-            return title_lookup.data[0]
-
-        raise HTTPException(status_code=404, detail="Recipe not found")
+        if not response.data:
+            raise HTTPException(status_code=404, detail="Recipe not found")
+        return response.data[0]
     except HTTPException:
         raise
     except Exception as exc:

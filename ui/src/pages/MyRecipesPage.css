@@ -27,6 +27,18 @@
   text-decoration: none;
 }
 
+.my-recipes__add-toggle {
+  align-self: flex-start;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #14532d;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  border-radius: 0.6rem;
+  padding: 0.55rem 1rem 0.55rem 1rem;
+  cursor: pointer;
+}
+
 .my-recipes__status {
   margin: 0 0 0 0;
   color: #4b5563;
