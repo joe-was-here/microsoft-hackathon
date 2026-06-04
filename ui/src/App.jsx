@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
+import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import { getHealth, detectIngredients, suggestRecipes } from './lib/api'
 import ImageUpload from './components/ImageUpload'
 import IngredientReview from './components/IngredientReview'
 import RecipeCard from './components/RecipeCard'
 import Spinner from './components/Spinner'
+import MyRecipesPage from './pages/MyRecipesPage'
+import RecipeDetailPage from './pages/RecipeDetailPage'
 import './App.css'
 
 // Splits a data URL ("data:image/png;base64,AAAA") into its media type and the
@@ -14,7 +17,7 @@ function parseDataUrl(dataUrl) {
   return { mediaType: match[1], data: match[2] }
 }
 
-function App() {
+function HomePage() {
   const [apiStatus, setApiStatus] = useState('checking')
   const [step, setStep] = useState('upload') // upload | detecting | review | suggesting | results
   const [ingredients, setIngredients] = useState([])
@@ -91,6 +94,9 @@ function App() {
         <h1>AI Sous Chef</h1>
         <p className="app__subtitle">Snap your ingredients, get recipes.</p>
         <p className="app__status">Backend: {apiStatus}</p>
+        <Link className="app__link" to="/my-recipes">
+          View saved recipes
+        </Link>
       </header>
 
       {step === 'upload' && (
@@ -141,6 +147,19 @@ function App() {
         </section>
       )}
     </main>
+  )
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/my-recipes" element={<MyRecipesPage />} />
+        <Route path="/recipes/:recipeId" element={<RecipeDetailPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

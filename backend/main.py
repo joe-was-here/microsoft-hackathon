@@ -5,6 +5,10 @@ from config import settings
 from routers import health, pantry, recipes
 
 
+def normalize_origin(origin: str) -> str:
+    return origin.strip().rstrip("/")
+
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="AI Sous Chef API",
@@ -19,9 +23,9 @@ def create_app() -> FastAPI:
     # Add production frontend origins from the FRONTEND_URL env var
     # (comma-separated to support multiple Vercel domains/previews).
     allowed_origins += [
-        origin.strip()
+        normalize_origin(origin)
         for origin in settings.FRONTEND_URL.split(",")
-        if origin.strip()
+        if normalize_origin(origin)
     ]
 
     app.add_middleware(
