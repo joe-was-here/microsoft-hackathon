@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from config import settings
 from routers import health, recipes
 
 
@@ -14,7 +15,13 @@ def create_app() -> FastAPI:
     allowed_origins = [
         "http://localhost:3000",
         "http://localhost:5173",
-        "https://your-app.vercel.app",
+    ]
+    # Add production frontend origins from the FRONTEND_URL env var
+    # (comma-separated to support multiple Vercel domains/previews).
+    allowed_origins += [
+        origin.strip()
+        for origin in settings.FRONTEND_URL.split(",")
+        if origin.strip()
     ]
 
     app.add_middleware(
