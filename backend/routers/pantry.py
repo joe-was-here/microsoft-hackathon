@@ -1,6 +1,7 @@
 import json
 import re
 
+import anthropic
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -37,29 +38,34 @@ class DetectResponse(BaseModel):
 async def detect_ingredients(body: DetectRequest) -> DetectResponse:
     client = get_anthropic_client()
 
-    message = client.messages.create(
-        model=settings.ANTHROPIC_MODEL,
-        max_tokens=1024,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": body.media_type,
-                            "data": body.image,
+    try:
+        message = client.messages.create(
+            model=settings.ANTHROPIC_MODEL,
+            max_tokens=1024,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": body.media_type,
+                                "data": body.image,
+                            },
                         },
-                    },
-                    {
-                        "type": "text",
-                        "text": DETECT_PROMPT,
-                    },
-                ],
-            }
-        ],
-    )
+                        {
+                            "type": "text",
+                            "text": DETECT_PROMPT,
+                        },
+                    ],
+                }
+            ],
+        )
+    except anthropic.BadRequestError as exc:
+        raise HTTPException(status_code=400, detail=f"Image could not be processed: {exc}") from exc
+    except anthropic.APIStatusError as exc:
+        raise HTTPException(status_code=502, detail=f"Anthropic API error: {exc}") from exc
 
     raw = message.content[0].text.strip()
 
